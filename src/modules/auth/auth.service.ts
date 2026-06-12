@@ -29,33 +29,3 @@ export const signupUser = async (data: SignupPayload) => {
 
   return result.rows[0];
 };
-
-export const loginUser = async (data: LoginPayload) => {
-  const { email, password } = data;
-
-  const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
-
-  if (result.rows.length === 0) {
-    return null;
-  }
-
-  const user = result.rows[0];
-  const isPasswordValid = password ? await bcrypt.compare(password, user.password) : false;
-
-  if (!isPasswordValid) {
-    return null;
-  }
-
-  const token = jwt.sign(
-    { id: user.id, name: user.name, role: user.role },
-    config.jwt_secret as string,
-    { expiresIn: '1d' }
-  );
-
-  const { password: _, ...userWithoutPassword } = user;
-
-  return {
-    token,
-    user: userWithoutPassword,
-  };
-};
